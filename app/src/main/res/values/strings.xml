@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">CC_Calc</string>
+    <string name="enter_your_number">Enter your number</string>
+    <string name="result">Result</string>
+
+
+</resources>
