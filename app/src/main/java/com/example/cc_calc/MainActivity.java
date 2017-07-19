@@ -13,26 +13,27 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import static com.example.cc_calc.R.id.numberButton_0;
 
 
 public class MainActivity extends AppCompatActivity {
-    protected Button[] buttons = new Button[16];
-    protected int[] buttons_id = {numberButton_0, R.id.numberButton_1, R.id.numberButton_2,
+    protected Button[] buttons = new Button[16];//Массив кнопочек, чтоб можно было объединять в группы и спокойно вырубать ненужные при изменении СС входа
+    protected int[] buttons_id = {R.id.numberButton_0, R.id.numberButton_1, R.id.numberButton_2,
             R.id.numberButton_3, R.id.numberButton_4, R.id.numberButton_5, R.id.numberButton_6,
             R.id.numberButton_7, R.id.numberButton_8, R.id.numberButton_9, R.id.numberButton_10,
             R.id.numberButton_11, R.id.numberButton_12, R.id.numberButton_13, R.id.numberButton_14,
-            R.id.numberButton_15};
-    public TextView textViewNumber, textViewResult;
-    protected Button resultButton, clearButton;
-    protected String stringNumber = "";
-    protected String resultString = "";
-    protected  int number = 0;
-    protected int numberPosition = 0;
-    protected Integer[] chosenCC = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    public Spinner spinnerIn, spinnerOut;
-    private static final String ResultTAG = "ResultTAG";
-    private static final String ButtonsTAG = "ButtonsTAG";
+            R.id.numberButton_15};//Массив id кнопочек, чтоб по кайфу тоже было и было легче все дела делать с определением кнопок
+    public TextView textViewNumber, textViewResult;//Текстовые поля ввода числа и вывода результата
+    protected Button resultButton, clearButton;//Кнопочки вывода результата и очищения всего, что движется и не движется
+    protected String stringNumber = "";//Спорный момент, так как если мы ставим null,
+    // то и с методом isEmpty(); не работает и выводит в textViewNumber первым значением null
+    protected String resultString = "";//Решил не париться и сделал так же как и со stringNumber. Люблю костыли <3
+    protected  int number = 0;//Первоначальное число
+    protected int numberPosition = 0;//Первоначальная тип система счисления
+    protected Integer[] chosenCC = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};//Массив СС, чтоб все по кайфу было (пока пишу комментарий не могу
+    //вспомнитиь почему же я все-таки остановился на этом, а не на массиве строк в strings.xml
+    public Spinner spinnerIn, spinnerOut;//Собственно спиннеры (не те, которые ты крутишь, маленький модник(хотя в принципе прикольная тема))
+    private static final String ResultTAG = "ResultTAG";//Для ЛогКошки
+    private static final String ButtonsTAG = "ButtonsTAG";//Для ЛогКошки
 
 
 
@@ -45,14 +46,18 @@ public class MainActivity extends AppCompatActivity {
 
         resultButton = (Button) findViewById(R.id.resultButton);
         clearButton = (Button) findViewById(R.id.clearButton);
-        for (int i = 0; i < buttons.length; i++) {
+        for (int i = 0; i < buttons.length; i++) {//Цикл определения кнопочек и установки листенера
+            //Посмотри как тут красиво написано
             buttons[i] = (Button) findViewById(buttons_id[i]);
             buttons[i].setOnClickListener(buttonsInOnClickListener);
         }
         resultButton.setOnClickListener(buttonsInOnClickListener);
         clearButton.setOnClickListener(buttonsInOnClickListener);
 
-
+        /*
+        А вот тут немного мне конечно было непонятно, так как до адаптеров я не дошел еще в своем обучении, поэтому
+        как люди писали так и я написал :)
+         */
         spinnerIn = (Spinner) findViewById(R.id.startCC);
         spinnerOut = (Spinner) findViewById(R.id.endCC);
         ArrayAdapter<Integer> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, chosenCC);
@@ -60,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerIn.setAdapter(spinnerAdapter);
         spinnerOut.setAdapter(spinnerAdapter);
         spinnerIn.setSelection(8);
+        spinnerOut.setSelection(0);
         spinnerIn.setOnItemSelectedListener(spinnerInOnItemSelectedListener);
         spinnerOut.setOnItemSelectedListener(spinnerOutOnItemSelectedListener);
 
@@ -67,7 +73,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
+    /*
+    Добавление листенера, который отвечает за первоначальную систему счисления числа
+    */
     OnItemSelectedListener spinnerInOnItemSelectedListener = new OnItemSelectedListener() {
         @Override
         public void onItemSelected (AdapterView<?> parent, View view, int position, long id) {
@@ -88,13 +96,18 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    /*
+    Добавление листенера на спиннер, который отвечает за конечную систему счисления
+    Кстати при изменении СС выхода, еще и результат меняется
+    Красиво? :3
+    */
     OnItemSelectedListener spinnerOutOnItemSelectedListener = new OnItemSelectedListener() {
         @Override
         public void onItemSelected (AdapterView<?> parent, View view, int position, long id) {
             resultString = "";
             numberPosition = position+2;
-            textViewResult.setTextColor(textViewResult.getHintTextColors());
-            textViewResult.setText(textViewResult.getHint());
+            searchResult(numberPosition, number);
+            textViewResult.setText(resultString);
         }
 
         @Override
@@ -104,25 +117,31 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
+
+    /*
+    Добавление листенера на кнопки, при нажатии на кнопку результат записывается в текстовое поле ввода числа и изменяется целочисленное значение,
+    которое будет изменяться
+    */
     View.OnClickListener  buttonsInOnClickListener = new OnClickListener() {
         @Override
         public void onClick (View v) {
             switch (v.getId()) {
                 case R.id.numberButton_0:
-                    number *= 10;
-                    number += 0;
-                    Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
-                    if (stringNumber != "") {
-                        stringNumber += "0";
-                        textViewNumber.setTextColor(getResources().getColor(android.R.color.black));
-                        textViewNumber.setText(stringNumber);
+                    number *= 10;//Для увеличения числа на 1 разряд (важно, чтоб стояло до изменения младшего разряда, иначе в конечном результате будет вычисляться
+                                //число не 8 допустим, а 80
+                    number += 0;//Изменение младшего разряда
+                    Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));//Вывод в лог текущего значения числа
+                    if (stringNumber != "") {//Проверка на то, может ли наше число начинаться с 0 в поле ввода
+                        stringNumber += "0";//Изменение числа для вывода в текстовое поле
+                        textViewNumber.setTextColor(getResources().getColor(android.R.color.black));//Спорный момент
+                        textViewNumber.setText(stringNumber);//Обновление поля ввода числа
                     }
                     break;
-                case R.id.numberButton_1:
+                case R.id.numberButton_1://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 1;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
-                    if (stringNumber == "") {
+                    if (stringNumber == "") {//Чтоб норм вводилось число
                         stringNumber = "1";
                         textViewNumber.setTextColor(getResources().getColor(android.R.color.black));
                         textViewNumber.setText(stringNumber);
@@ -132,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_2:
+                case R.id.numberButton_2://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 2;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -146,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_3:
+                case R.id.numberButton_3://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 3;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -160,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_4:
+                case R.id.numberButton_4://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 4;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -174,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_5:
+                case R.id.numberButton_5://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 5;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -188,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_6:
+                case R.id.numberButton_6://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 6;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -202,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_7:
+                case R.id.numberButton_7://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 7;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -216,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_8:
+                case R.id.numberButton_8://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 8;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -230,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_9:
+                case R.id.numberButton_9://Все то же самое, что и с R.id.numberButton_0
                     number *= 10;
                     number += 9;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -244,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_10:
+                case R.id.numberButton_10://Все то же самое, что и с R.id.numberButton_0, за исключением того, что теперь двухзначные числа вводятся
                     number *= 100;
                     number += 10;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -258,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_11:
+                case R.id.numberButton_11://Все то же самое, что и с R.id.numberButton_0, за исключением того, что теперь двухзначные числа вводятся
                     number *= 100;
                     number += 11;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -272,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_12:
+                case R.id.numberButton_12://Все то же самое, что и с R.id.numberButton_0, за исключением того, что теперь двухзначные числа вводятся
                     number *= 100;
                     number += 12;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -286,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_13:
+                case R.id.numberButton_13://Все то же самое, что и с R.id.numberButton_0, за исключением того, что теперь двухзначные числа вводятся
                     number *= 100;
                     number += 13;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -300,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_14:
+                case R.id.numberButton_14://Все то же самое, что и с R.id.numberButton_0, за исключением того, что теперь двухзначные числа вводятся
                     number *= 100;
                     number += 14;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -315,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.numberButton_15:
+                case R.id.numberButton_15://Все то же самое, что и с R.id.numberButton_0, за исключением того, что теперь двухзначные числа вводятся
                     number *= 100;
                     number += 15;
                     Log.d(ButtonsTAG, String.valueOf(v.getId()+" "+ number));
@@ -330,12 +349,12 @@ public class MainActivity extends AppCompatActivity {
                         textViewNumber.setText(stringNumber);
                     }
                     break;
-                case R.id.resultButton:
+                case R.id.resultButton://Кнопка для вывода результата
                     textViewResult.setTextColor(getResources().getColor(android.R.color.black));
-                    searchResult(numberPosition);
+                    searchResult(numberPosition, number);//Метод поиска результата
                     textViewResult.setText(resultString);
                     break;
-                case R.id.clearButton:
+                case R.id.clearButton://Кнопка для очищения полей
                     stringNumber = "";
                     resultString = "";
                     number = 0;
@@ -353,18 +372,40 @@ public class MainActivity extends AppCompatActivity {
 
     };
 
-    protected String searchResult (int position){
+
+    /*
+    Метод, который находит результат (работает пока что только с переводом из десятичной системы счисления)
+    Параметр position - система счисления (позиция в спиннере + 2)
+    Параметр numberSearchResult для того, чтоб первоначально введенное число сохранялось
+    (при изменении позиции спиннера выхода происходит нормальное изменение значения)
+     */
+    protected String searchResult (int position, int numberSearchResult){
         int result;
+        numberSearchResult = number;
+        resultString = "";
         Log.d(ResultTAG, "position: " + position);
-        while (number != 0){
-            result = number % position;
-            Log.d(ResultTAG, "number: " + number);
-            number /= position;
+        while (numberSearchResult != 0){
+            result = numberSearchResult % position;//Нахождение остатка числа
+            // (в соответствии с самым известным алгоритмом, которым школьники даже умеют пользоваться в отличие от тебя)
+            Log.d(ResultTAG, "number: " + numberSearchResult);
+            numberSearchResult /= position;//Нахождение целой части (смотри скобки предыдущего коммента)
             Log.d(ResultTAG, "result: " + result);
-            resultString = result + resultString;
+            resultString = result + resultString;//Можно спокойно реверсировать результат (смотри все те же скобки) + сразу занести в textViewResult.setText(stringResult);
             Log.d(ResultTAG, "resultString: " + resultString);
         }
-
-        return resultString;
+        return resultString;//Собственно возвращаем значение, которое нам нужно и заносим его
     }
 }
+
+    /*
+    Планы на дальнейшую жизнь:
+    1) Дописать метод searchResult(int, int), чтоб работал еще и с другими системами счисления ну и чтоб результат нормально записывался, а то если получается число
+    10, то так и записывается: 10, а не A
+    2) По-нормальному доделать интерфейс, добавить еще чтоб можно было по-символьно удалять, кнопочку для поиска числа с плавающей запятой
+    3) Собственно реализовать метод (алгоритм я примерно вспомнил, но нужно будет определиться сколько шагов в нем делать, потому что он может идти до бесконечности)
+    4) Оформить нормально комментарии, а то что-то мне слишком сильно понравилось такие комментарии писать
+    5) Можно оформить активность, в которой будет показываться ход решения и тд
+
+    Остальные предложения писать мне в VK: @id33522160
+                                       Telegram: @kefir_103
+     */
