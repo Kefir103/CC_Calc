@@ -28,7 +28,8 @@ public class MainActivity extends AppCompatActivity {
     // то и с методом isEmpty(); не работает и выводит в textViewNumber первым значением null
     protected String resultString = "";//Решил не париться и сделал так же как и со stringNumber. Люблю костыли <3
     protected  int number = 0;//Первоначальное число
-    protected int numberPosition = 0;//Первоначальная тип система счисления
+    protected int numberPositionOut = 0;//Выходная система счисления
+    protected int numberPositionIn = 0;//Первоначальная тип система счисления
     protected Integer[] chosenCC = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};//Массив СС, чтоб все по кайфу было (пока пишу комментарий не могу
     //вспомнитиь почему же я все-таки остановился на этом, а не на массиве строк в strings.xml
     public Spinner spinnerIn, spinnerOut;//Собственно спиннеры (не те, которые ты крутишь, маленький модник(хотя в принципе прикольная тема))
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 buttons[i].setEnabled(true);
             }
             stringNumber = "";
+            numberPositionIn = position + 2;
             textViewNumber.setText(textViewNumber.getHint());
             textViewNumber.setTextColor(textViewNumber.getHintTextColors());
         }
@@ -105,8 +107,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onItemSelected (AdapterView<?> parent, View view, int position, long id) {
             resultString = "";
-            numberPosition = position+2;
-            searchResult(numberPosition, number);
+            numberPositionOut = position + 2;
+            searchResult(numberPositionOut, numberPositionIn);
             textViewResult.setText(resultString);
         }
 
@@ -351,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.resultButton://Кнопка для вывода результата
                     textViewResult.setTextColor(getResources().getColor(android.R.color.black));
-                    searchResult(numberPosition, number);//Метод поиска результата
+                    searchResult(numberPositionOut, numberPositionIn);//Метод поиска результата
                     textViewResult.setText(resultString);
                     break;
                 case R.id.clearButton://Кнопка для очищения полей
@@ -362,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
                     textViewNumber.setTextColor(textViewNumber.getHintTextColors());
                     textViewResult.setText(textViewResult.getHint());
                     textViewResult.setTextColor(textViewResult.getHintTextColors());
-                    Log.d(ResultTAG, stringNumber + " " + resultString + " " + number + " " + numberPosition);
+                    Log.d(ResultTAG, stringNumber + " " + resultString + " " + number + " " + numberPositionIn + " " + numberPositionOut);
                     Toast.makeText(MainActivity.this, "Result is clear", Toast.LENGTH_SHORT)
                           .show();
                     break;
@@ -374,21 +376,36 @@ public class MainActivity extends AppCompatActivity {
 
 
     /*
-    Метод, который находит результат (работает пока что только с переводом из десятичной системы счисления)
-    Параметр position - система счисления (позиция в спиннере + 2)
-    Параметр numberSearchResult для того, чтоб первоначально введенное число сохранялось
+    Метод, который находит результат (Работает с системами счисления <= 10 на входе и выходе)
+    Параметр positionIn, positionOut - системы счисления (позиция в спиннере + 2)
     (при изменении позиции спиннера выхода происходит нормальное изменение значения)
      */
-    protected String searchResult (int position, int numberSearchResult){
+    protected String searchResult (int positionOut, int positionIn){
         int result;
-        numberSearchResult = number;
+        int numberSearchResult = 0;
         resultString = "";
-        Log.d(ResultTAG, "position: " + position);
+        Log.d(ResultTAG, "position: " + positionOut);
+        int numberSearchResultIn = number;
+        Log.d(ResultTAG, "numberSearchResultIn" + numberSearchResultIn);
+        if (numberPositionIn < 10){
+            int i = 0;
+            while (numberSearchResultIn != 0){
+                numberSearchResult += ((numberSearchResultIn % 10) * Math.pow(positionIn, i));
+                Log.d (ResultTAG, "numberSearchResult: " + numberSearchResult);
+                numberSearchResultIn /= 10;
+                Log.d(ResultTAG, "i = "+i);
+                i++;
+                Log.d (ResultTAG, "numberSearchResultIn: " + numberSearchResultIn);
+
+            }
+        } else{
+            numberSearchResult = number;
+        }
         while (numberSearchResult != 0){
-            result = numberSearchResult % position;//Нахождение остатка числа
+            result = numberSearchResult % positionOut;//Нахождение остатка числа
             // (в соответствии с самым известным алгоритмом, которым школьники даже умеют пользоваться в отличие от тебя)
             Log.d(ResultTAG, "number: " + numberSearchResult);
-            numberSearchResult /= position;//Нахождение целой части (смотри скобки предыдущего коммента)
+            numberSearchResult /= positionOut;//Нахождение целой части (смотри скобки предыдущего коммента)
             Log.d(ResultTAG, "result: " + result);
             resultString = result + resultString;//Можно спокойно реверсировать результат (смотри все те же скобки) + сразу занести в textViewResult.setText(stringResult);
             Log.d(ResultTAG, "resultString: " + resultString);
