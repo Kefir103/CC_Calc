@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     public Spinner spinnerIn, spinnerOut;//Собственно спиннеры (не те, которые ты крутишь, маленький модник(хотя в принципе прикольная тема))
     private static final String ResultTAG = "ResultTAG";//Для ЛогКошки
     private static final String ButtonsTAG = "ButtonsTAG";//Для ЛогКошки
+    boolean isMoreThan10 = true;
 
 
 
@@ -384,40 +385,97 @@ public class MainActivity extends AppCompatActivity {
         int result;
         int numberSearchResult = 0;
         resultString = "";
-        Log.d(ResultTAG, "position: " + positionOut);
+        Log.d(ResultTAG, "positionOut: " + positionOut);
+        Log.d(ResultTAG, "positionIn: " + positionIn);
         int numberSearchResultIn = number;
-        Log.d(ResultTAG, "numberSearchResultIn" + numberSearchResultIn);
-        if (numberPositionIn < 10){
-            int i = 0;
+        Log.d(ResultTAG, "numberSearchResultIn: " + numberSearchResultIn);
+        if (positionIn != 10){//Проверка на необходимость перевода числа в десятичную систему счисления, поскольку допустим из 8 в 2 СС можно перевести
+            //только при переводе сначала 8 -> 10, а потом уже 10 -> 2
+            int i = 0;//Для степени в которое мы возводим число, обозначающее СС при переводе в 10 СС
+            int j = stringNumber.length()-1;//Для метода isMoreThan10In (int);
             while (numberSearchResultIn != 0){
-                numberSearchResult += ((numberSearchResultIn % 10) * Math.pow(positionIn, i));
-                Log.d (ResultTAG, "numberSearchResult: " + numberSearchResult);
-                numberSearchResultIn /= 10;
+                isCCMoreThan10In(j);//Проверка на символ в вводимом числе
+                Log.d(ResultTAG, "isMoreThan10: " + isMoreThan10);
+                if (isMoreThan10 == false) {//Проверка на флаг
+                    numberSearchResult += ((numberSearchResultIn % 10) * Math.pow(positionIn, i));//Если цифра < 10, то идем по одному разряду
+                    Log.d(ResultTAG, "Number is: " + numberSearchResultIn % 10);
+                    Log.d(ResultTAG, "numberSearchResult: " + numberSearchResult);
+                    numberSearchResultIn /= 10;
+                } else if (isMoreThan10 == true){//Проверка на флаг
+                    numberSearchResult += ((numberSearchResultIn % 100) * Math.pow(positionIn, i));//Если цифра > 10, то идем на 2 разряда
+                    Log.d(ResultTAG, "Number is: " + numberSearchResultIn % 100);
+                    Log.d(ResultTAG, "numberSearchResult: " + numberSearchResult);
+                    numberSearchResultIn /= 100;
+                }
                 Log.d(ResultTAG, "i = "+i);
-                i++;
+                i++;//Итерация
+                j--;//Итерация
                 Log.d (ResultTAG, "numberSearchResultIn: " + numberSearchResultIn);
-
             }
         } else{
-            numberSearchResult = number;
+            numberSearchResult = number;//Если на входе была СС=10, то оставляем число как есть и просто не выполняем лишние действия
         }
         while (numberSearchResult != 0){
             result = numberSearchResult % positionOut;//Нахождение остатка числа
             // (в соответствии с самым известным алгоритмом, которым школьники даже умеют пользоваться в отличие от тебя)
-            Log.d(ResultTAG, "number: " + numberSearchResult);
             numberSearchResult /= positionOut;//Нахождение целой части (смотри скобки предыдущего коммента)
-            Log.d(ResultTAG, "result: " + result);
-            resultString = result + resultString;//Можно спокойно реверсировать результат (смотри все те же скобки) + сразу занести в textViewResult.setText(stringResult);
-            Log.d(ResultTAG, "resultString: " + resultString);
+            isMoreThan10Out(result);//Проверка на наличие "цифр-символов" (для СС > 10 число 10 = А допустим и тд в выводе)
         }
         return resultString;//Собственно возвращаем значение, которое нам нужно и заносим его
+    }
+
+    /*
+    Метод, который определяет числа на входе (чтоб не каждый раз поразрядно проходилось по числу, а допустим
+    при попадании на цифру А, оно при преобразовании в число 10 сокращало преобразовываемое число на 2 разряда, а не на 1
+    Метод как по мне костыльный, поэтому, Виталь, лучше подумать над нормальным алгоритмом для метода searchResult
+    Но в принципе все работает как надо
+     */
+    protected void isCCMoreThan10In (int m){//Если попадается цифра-символ, то флаг = true, иначе = false
+            if (stringNumber.charAt(m) == 'A'){//Не забывай кстати, что мы идем с младших разрядов, поэтому и по строке идем с правой части
+                isMoreThan10 = true;
+            } else if(stringNumber.charAt(m) == 'B'){
+                isMoreThan10 = true;
+            } else if (stringNumber.charAt(m) == 'C'){
+                isMoreThan10 = true;
+            } else if (stringNumber.charAt(m) == 'D'){
+                isMoreThan10 = true;
+            } else if (stringNumber.charAt(m) =='E'){
+                isMoreThan10 = true;
+            } else if (stringNumber.charAt(m) =='F'){
+                isMoreThan10 = true;
+            } else {
+                isMoreThan10 = false;
+            }
+    }
+
+    /*
+    Метод, который определяет какая цифра будет на выходе, чтоб выводилось не 10 допустим, а выводилась А в строке результата
+    Тоже по-костыльному, но работает
+     */
+
+    protected void isMoreThan10Out(int Result){
+        if (Result == 10){//Собственно если у нас получилось число двухзначное в остатке, то преобразуем его в символ
+            resultString = "A" + resultString;//Записываем в строку, сохраняя инверсию (а не resultString += "A", допустим)
+        } else if (Result == 11){
+            resultString = "B" + resultString;
+        } else if (Result == 12){
+            resultString = "C" + resultString;
+        } else if (Result == 13) {
+            resultString = "D" + resultString;
+        } else if (Result == 14) {
+            resultString = "E" + resultString;
+        } else if (Result == 15) {
+            resultString = "F" + resultString;
+        } else {
+            resultString = Result + resultString;
+        }
     }
 }
 
     /*
     Планы на дальнейшую жизнь:
     1) Дописать метод searchResult(int, int), чтоб работал еще и с другими системами счисления ну и чтоб результат нормально записывался, а то если получается число
-    10, то так и записывается: 10, а не A
+    10, то так и записывается: 10, а не A (сделано)
     2) По-нормальному доделать интерфейс, добавить еще чтоб можно было по-символьно удалять, кнопочку для поиска числа с плавающей запятой
     3) Собственно реализовать метод (алгоритм я примерно вспомнил, но нужно будет определиться сколько шагов в нем делать, потому что он может идти до бесконечности)
     4) Оформить нормально комментарии, а то что-то мне слишком сильно понравилось такие комментарии писать
